@@ -40,11 +40,20 @@ public class ChatController {
     @MessageMapping("/users") // client sends /app/users
     @SendTo("/topic/users")   // broadcast to all subscribers
     public List<String> getConnectedUsers() {
-        return userRegistry.getUsers()
+        // 🔹 Step 1: Collect online users from SimpUserRegistry
+        List<String> onlineUsers = userRegistry.getUsers()
                 .stream()
-                .map(SimpUser::getName) // username of each connected user
+                .map(SimpUser::getName)          // username of each connected user
+                .filter(name -> name != null)    // 🔹 filter out nulls
                 .collect(Collectors.toList());
+
+        // 🔹 Step 2: Log for debugging
+        System.out.println("WebSocket online users: " + onlineUsers);
+
+        // 🔹 Step 3: Return the list
+        return onlineUsers;
     }
+
     
 
 }

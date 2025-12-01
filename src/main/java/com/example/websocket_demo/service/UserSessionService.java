@@ -3,6 +3,8 @@ package com.example.websocket_demo.service;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -18,7 +20,8 @@ public class UserSessionService {
         onlineUsers.remove(username);
     }
 
-    public Set<String> getOnlineUsers() {
-        return onlineUsers;
+    // ✅ Return a List instead of Set
+    public List<String> getOnlineUsers() {
+        return new ArrayList<>(onlineUsers);
     }
 }

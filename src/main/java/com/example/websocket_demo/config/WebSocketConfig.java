@@ -1,40 +1,27 @@
 package com.example.websocket_demo.config;
 
-import com.example.websocket_demo.service.UserSessionService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.EventListener;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Component;
-import org.springframework.web.socket.messaging.SessionConnectEvent;
-import org.springframework.web.socket.messaging.SessionDisconnectEvent;
-import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-@Component
-public class WebSocketConfig {
+@Configuration
+@EnableWebSocketMessageBroker
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    @Autowired
-    private UserSessionService userSessionService;
-
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
-
-    @EventListener
-    public void handleWebSocketConnectListener(SessionConnectEvent event) {
-        StompHeaderAccessor headers = StompHeaderAccessor.wrap(event.getMessage());
-        String username = headers.getFirstNativeHeader("username");
-        if(username != null){
-            userSessionService.addUser(username);
-            messagingTemplate.convertAndSend("/topic/users", userSessionService.getOnlineUsers());
-        }
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry config) {
+        config.enableSimpleBroker("/topic", "/queue");
+        config.setApplicationDestinationPrefixes("/app");
     }
 
-    @EventListener
-    public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
-        StompHeaderAccessor headers = StompHeaderAccessor.wrap(event.getMessage());
-        String username = headers.getUser() != null ? headers.getUser().getName() : null;
-        if(username != null){
-            userSessionService.removeUser(username);
-            messagingTemplate.convertAndSend("/topic/users", userSessionService.getOnlineUsers());
-        }
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.addEndpoint("/ws")
+                .setHandshakeHandler(new CustomHandshakeHandler())
+                .addInterceptors(new UserHandshakeInterceptor())
+                .setAllowedOriginPatterns("*")
+                .withSockJS();
     }
 }

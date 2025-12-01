@@ -15,6 +15,10 @@ public class CustomHandshakeHandler extends DefaultHandshakeHandler {
                                       Map<String, Object> attributes) {
 
         String username = (String) attributes.get("username");
+
+        // Log the username for debugging
+        System.out.println("Handshake username: " + username);
+
         return () -> username; // set Principal name
     }
 }
